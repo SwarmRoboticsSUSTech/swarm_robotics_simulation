@@ -4,12 +4,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+robot_nums = 4
+
 class Robot: #TODO
-    def __init__(self, x_init, y_init, k):
+    def __init__(self, x_init, y_init, k, speed_init):
         self.x = x_init
         self.y = y_init
         self.dx = 1/math.sqrt(1+k**2)
         self.dy = self.dx * k
+        self.speed = speed_init
+    
+    def random_walk():
+        pass
+
+    def follow():
+        pass
+    
+    def talk():
+        pass
+
+    def update_self():
+        pass
+
+robots = []
+for i in range(robot_nums):
+    robots.append(Robot(random.randint(0, 10), random.randint(0, 10), random.randint(-10, 10), 1))
+
+
 
 fig, ax = plt.subplots()
 xdata, ydata = [], []
