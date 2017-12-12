@@ -1,3 +1,6 @@
+'''
+Attention! radians and degrees!
+'''
 import random
 import math
 import numpy as np
@@ -12,7 +15,7 @@ class Robot: #TODO
         self.x = x_init
         self.y = y_init
         self.angle = init_angle
-        self.k = math.tan(self.angle)
+        self.k = math.tan(math.radians(self.angle))
         self.dx = 1 / math.sqrt(1 + self.k ** 2)
         self.dy = math.sqrt(1 - self.dx**2)
         self.speed = speed_init
@@ -31,13 +34,21 @@ class Robot: #TODO
             self.x += self.dx    
             self.y += self.dy
         else:
-            self.angle = self.angle + math.pi / 2
-        self.angle = (self.angle + random.uniform(-math.pi/4, math.pi/4)) % (2 * math.pi)
-        self.k = math.tan(self.angle)
-        self.dx = 1 / math.sqrt(1 + self.k ** 2)
-        self.dy = math.sqrt(1 - self.dx**2)
-        
-
+            self.angle = self.angle + 45
+        self.angle = (self.angle + random.uniform(-45, 45)) % 360
+        self.k = math.tan(math.radians(self.angle))
+        if self.angle >= 0 and self.angle < 90:
+            self.dx = 1 / math.sqrt(1 + self.k ** 2)
+            self.dy = math.sqrt(1 - self.dx**2)
+        elif self.angle >= 90 and self.angle < 180:
+            self.dx = - 1 / math.sqrt(1 + self.k ** 2)
+            self.dy = math.sqrt(1 - self.dx ** 2)
+        elif self.angle >= 180 and self.angle < 270:
+            self.dx = - 1 / math.sqrt(1 + self.k ** 2)
+            self.dy = - math.sqrt(1 - self.dx ** 2)
+        elif self.angle >= 270 and self.angle < 360:
+            self.dx = 1 / math.sqrt(1 + self.k ** 2)
+            self.dy = - math.sqrt(1 - self.dx ** 2)
 robot0 =  Robot(random.randint(-10, 10), random.randint(-10, 10), 0, 1)
 
 # First set up the figure, the axis, and the plot element we want to animate
