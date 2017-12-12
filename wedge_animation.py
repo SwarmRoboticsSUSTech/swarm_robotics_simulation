@@ -31,7 +31,7 @@ class Robot: #TODO
             self.x += self.dx    
             self.y += self.dy
         else:
-            self.angle = self.angle + math.pi / 4
+            self.angle = self.angle + math.pi / 2
         self.angle = (self.angle + random.uniform(-math.pi/4, math.pi/4)) % (2 * math.pi)
         self.k = math.tan(self.angle)
         self.dx = 1 / math.sqrt(1 + self.k ** 2)
@@ -42,7 +42,7 @@ robot0 =  Robot(random.randint(-10, 10), random.randint(-10, 10), 0, 1)
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
-ax = plt.axes(xlim=(-10, 10), ylim=(-10, 10))
+ax = plt.axes(xlim=(-12, 12), ylim=(-12, 12))
 plt.grid(True)
 # patch_one = matplotlib.patches.Circle((0, 0), 1)
 patch_one = matplotlib.patches.Wedge((robot0.x,robot0.y), 1, robot0.angle - 25, robot0.angle + 25)
@@ -61,6 +61,7 @@ def animate(frame):
     patch_one.set_theta1(robot0.angle - 25)
     patch_one.set_theta2(robot0.angle + 25)
     patch_one._recompute_path()
+    print(robot0.angle)
     return patch_one,
 
 # call the animator.  blit=True means only re-draw the parts that have changed.
