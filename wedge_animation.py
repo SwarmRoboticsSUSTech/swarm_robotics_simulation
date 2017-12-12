@@ -57,10 +57,11 @@ robots = [Robot(random.randint(-10, 10), random.randint(-10, 10), 0, 1) for i in
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
 ax = plt.axes(xlim=(-12, 12), ylim=(-12, 12))
-plt.grid(True)
+# plt.grid(True)
 # patch_one = matplotlib.patches.Circle((0, 0), 1)
 # patch_one = matplotlib.patches.Wedge((robot0.x,robot0.y), 1, robot0.angle - 25, robot0.angle + 25)
 patchs = [matplotlib.patches.Wedge((robot_i.x,robot_i.y), 1, robot_i.angle - 25, robot_i.angle + 25) for robot_i in robots]
+patchs_tail = [matplotlib.patches.Wedge((robot_i.x,robot_i.y), 1, robot_i.angle + 90, robot_i.angle + 270) for robot_i in robots]
 
 # initialization function: plot the background of each frame
 def init():
@@ -69,8 +70,10 @@ def init():
     # return patch_one,
     for i in range(4):
         patchs[i].radius = 1
+        patchs_tail[i].radius = 1
         ax.add_patch(patchs[i])
-    return patchs[0],patchs[1],patchs[2],patchs[3],
+        ax.add_patch(patchs_tail[i])
+    return patchs + patchs_tail
 
 
 # animation function.  This is called sequentially
@@ -87,15 +90,23 @@ def animate(frame):
         robots[i].update_direction()
         # robot0.random_walk()
         patchs[i].set_center((robots[i].x, robots[i].y))
+        patchs_tail[i].set_center((robots[i].x, robots[i].y))
+
         patchs[i].set_theta1(robots[i].angle - 25)
         patchs[i].set_theta2(robots[i].angle + 25)
+        patchs_tail[i].set_theta1(robots[i].angle + 90)
+        patchs_tail[i].set_theta2(robots[i].angle + 270)
+
+        patchs[i].set_color('r')
+        patchs_tail[i].set_color('b')
+
         patchs[i]._recompute_path()
-        # print(robots[i].angle)
-    return patchs[0],patchs[1],patchs[2],patchs[3],
+        patchs_tail[i]._recompute_path()
+    return patchs + patchs_tail
 
 
 # call the animator.  blit=True means only re-draw the parts that have changed.
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=10, blit=True)
+                               frames=200, interval=100, blit=True)
 
 plt.show()
