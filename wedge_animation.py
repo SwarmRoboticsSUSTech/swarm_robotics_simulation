@@ -13,7 +13,8 @@ update_interval = 100
 speed_init = 0.5
 
 class Robot: #TODO
-    def __init__(self, x_init, y_init, init_angle, speed_init):
+    def __init__(self, id, x_init, y_init, init_angle, speed_init):
+        self.id = id
         self.x = x_init
         self.y = y_init
         self.angle = init_angle
@@ -21,6 +22,8 @@ class Robot: #TODO
         self.dx = 1 / math.sqrt(1 + self.k ** 2)
         self.dy = math.sqrt(1 - self.dx**2)
         self.speed = speed_init
+        self.is_following = None
+        self.follower = None
     # def random_walk(self):
         
 
@@ -28,6 +31,9 @@ class Robot: #TODO
         pass
     
     def talk(self):
+        pass
+    
+    def judge_overlaping(self):
         pass
 
     def update_direction(self):
@@ -52,10 +58,9 @@ class Robot: #TODO
             self.dy = - math.sqrt(1 - self.dx ** 2)
 
 
-def judge_overlaping():
-    pass
 
-robots = [Robot(random.randint(-10, 10), random.randint(-10, 10), 0, speed_init) for i in range(4)]
+
+robots = [Robot(i, random.randint(-10, 10), random.randint(-10, 10), 0, speed_init) for i in range(robot_nums)]
 
 
 # First set up the figure, the axis, and the plot element we want to animate
@@ -67,7 +72,7 @@ patchs_tail = [matplotlib.patches.Wedge((robot_i.x,robot_i.y), 1, robot_i.angle 
 
 # initialization function: plot the background of each frame
 def init():
-    for i in range(4):
+    for i in range(robot_nums):
         patchs[i].radius = 1
         patchs_tail[i].radius = 1
         ax.add_patch(patchs[i])
@@ -77,7 +82,7 @@ def init():
 
 # animation function.  This is called sequentially
 def animate(frame):
-    for i in range(4):
+    for i in range(robot_nums):
         robots[i].update_direction()
         # robot0.random_walk()
         patchs[i].set_center((robots[i].x, robots[i].y))
