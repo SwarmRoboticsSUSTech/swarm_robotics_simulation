@@ -9,11 +9,14 @@ from matplotlib import animation
 import matplotlib.patches
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
+# from collections import deque
 
-robot_nums = 4
+robot_nums = 10
 update_interval = 100
-speed_init = 5
+speed_init = 1
 search_radius = 1
+follow_num = 1
+# follow_list = deque()
 
 class Robot:  # TODO
     def __init__(self, id, x_init, y_init, init_angle, speed_init):
@@ -21,6 +24,8 @@ class Robot:  # TODO
         self.speed = speed_init
         self.x = x_init
         self.y = y_init
+        self.previous_x = self.x
+        self.previous_y = self.y
         self.angle = init_angle
         self.k = math.tan(math.radians(self.angle))
         self.dx = self.speed / math.sqrt(1 + self.k ** 2)
@@ -35,10 +40,19 @@ class Robot:  # TODO
         self.point_D = (self.x + search_radius * math.cos(math.radians(self.angle + 270)), self.y + search_radius * math.sin(math.radians(self.angle + 270)))
     # def random_walk(self):
 
-    def follow(self, robots):
-        pass
+    def follow(self, following_robot): # TODO
+        # self.k = (following_robot.y - self.y) / (following_robot.x - self.x)
+        # temp_angle = math.atan2((following_robot.x, following_robot.y), (self.x, self.y))
+        # if temp_angle < 0:
+        #     temp_angle += temp_angle + math.pi
+        # self.angle = math.degrees(temp_angle)
+        self.angle = angle_between((following_robot.previous_x - self.x, following_robot.previous_y - self.y), (1,0))
+        self.k = math.tan(math.radians(self.angle))
+        self.x = following_robot.previous_x
+        self.y = following_robot.previous_y
 
-    def talk(self):
+
+    def talk(self): # TODO
         pass
 
     def judge_overlaping(self, another_robot):
@@ -50,31 +64,39 @@ class Robot:  # TODO
             self.is_following = another_robot.id
             another_robot.follower = self.id
             print(self.id, " has find ", another_robot.id)
+            global follow_num
+            follow_num += 1
+
+    def update_previous_coordinates(self):
+        self.previous_x = self.x
+        self.previous_y = self.y
 
     def update_itself(self):
         '''
         calculate angle first, then calculate dx and dy
         '''
-        if (self.x + self.dx) < 10 and (self.x + self.dx) > -10 and (self.y + self.dy) < 10 and (self.y + self.dy) > -10:
-            self.x += self.dx
-            self.y += self.dy
+        if self.is_following is None:
+            if (self.x + self.dx) < 10 and (self.x + self.dx) > -10 and (self.y + self.dy) < 10 and (self.y + self.dy) > -10:
+                self.x += self.dx
+                self.y += self.dy
+            else:
+                self.angle = self.angle + 45
+            self.angle = (self.angle + random.uniform(-45, 45)) % 360
+            self.k = math.tan(math.radians(self.angle))
+            if self.angle >= 0 and self.angle < 90:
+                self.dx = self.speed / math.sqrt(1 + self.k ** 2)
+                self.dy = math.sqrt(self.speed**2 - self.dx**2)
+            elif self.angle >= 90 and self.angle < 180:
+                self.dx = - self.speed / math.sqrt(1 + self.k ** 2)
+                self.dy = math.sqrt(self.speed**2 - self.dx ** 2)
+            elif self.angle >= 180 and self.angle < 270:
+                self.dx = - self.speed / math.sqrt(1 + self.k ** 2)
+                self.dy = - math.sqrt(self.speed**2 - self.dx ** 2)
+            elif self.angle >= 270 and self.angle < 360:
+                self.dx = self.speed / math.sqrt(1 + self.k ** 2)
+                self.dy = - math.sqrt(self.speed**2 - self.dx ** 2)
         else:
-            self.angle = self.angle + 45
-        self.angle = (self.angle + random.uniform(-45, 45)) % 360
-        self.k = math.tan(math.radians(self.angle))
-        if self.angle >= 0 and self.angle < 90:
-            self.dx = self.speed / math.sqrt(1 + self.k ** 2)
-            self.dy = math.sqrt(self.speed**2 - self.dx**2)
-        elif self.angle >= 90 and self.angle < 180:
-            self.dx = - self.speed / math.sqrt(1 + self.k ** 2)
-            self.dy = math.sqrt(self.speed**2 - self.dx ** 2)
-        elif self.angle >= 180 and self.angle < 270:
-            self.dx = - self.speed / math.sqrt(1 + self.k ** 2)
-            self.dy = - math.sqrt(self.speed**2 - self.dx ** 2)
-        elif self.angle >= 270 and self.angle < 360:
-            self.dx = self.speed / math.sqrt(1 + self.k ** 2)
-            self.dy = - math.sqrt(self.speed**2 - self.dx ** 2)
-
+            self.follow(robots[self.is_following])
         self.point_A = (self.x + search_radius * math.cos(math.radians(self.angle - 25)), self.y + search_radius * math.sin(math.radians(self.angle - 25)))
         self.point_B = (self.x + search_radius * math.cos(math.radians(self.angle + 25)), self.y + search_radius * math.sin(math.radians(self.angle + 25)))
         self.point_C = (self.x + search_radius * math.cos(math.radians(self.angle + 90)), self.y + search_radius * math.sin(math.radians(self.angle + 90)))
@@ -98,6 +120,21 @@ patchs_tail = [matplotlib.patches.Wedge(
 # def stop_circle():
 #     return 0
 
+
+def angle_between(p1, p2):
+    ang1 = np.arctan2(*p1[::-1])
+    ang2 = np.arctan2(*p2[::-1])
+    return np.rad2deg((ang1 - ang2) % (2 * np.pi))
+
+def check_chain():
+    if follow_num == robot_nums:
+        return False
+    else:
+        return True
+
+# def check_chain():
+#     if
+
 def init():
     for i in range(robot_nums):
         patchs[i].radius = search_radius
@@ -112,7 +149,9 @@ def animate(frame):
     for i in range(robot_nums):
         robots[i].update_itself()
     for i in range(robot_nums):
-        if robots[i].is_following is None:
+        robots[i].update_previous_coordinates()
+    for i in range(robot_nums):
+        if robots[i].is_following is None and check_chain():
             another_robot_list = [robots[j] for j in range(robot_nums) if j!=i and robots[j].follower is None]
             for another_robot in another_robot_list:
                 if robots[i].is_following is None and another_robot.is_following != i:
@@ -136,6 +175,6 @@ def animate(frame):
 
 # call the animator.  blit=True means only re-draw the parts that have changed.
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=200, interval=update_interval, blit=True)
+                               frames=1, interval=update_interval, blit=True)
 
 plt.show()
