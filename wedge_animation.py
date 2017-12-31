@@ -9,16 +9,16 @@ from matplotlib import animation
 import matplotlib.patches
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
+import sys
 # from collections import deque
 
-robot_nums = 10
+robot_nums = int(sys.argv[1])
 update_interval = 100
 speed_init = 1
 search_radius = 1
 follow_num = 1
-# follow_list = deque()
 
-class Robot:  # TODO
+class Robot:
     def __init__(self, id, x_init, y_init, init_angle, speed_init):
         self.id = id
         self.speed = speed_init
@@ -33,39 +33,36 @@ class Robot:  # TODO
 
         self.is_following = None
         self.follower = None
-
+        
+        # self.queue_list = deque(self.id)
+        self.queue_list = [self.id]
         self.point_A = (self.x + search_radius * math.cos(math.radians(self.angle - 25)), self.y + search_radius * math.sin(math.radians(self.angle - 25)))
         self.point_B = (self.x + search_radius * math.cos(math.radians(self.angle + 25)), self.y + search_radius * math.sin(math.radians(self.angle + 25)))
         self.point_C = (self.x + search_radius * math.cos(math.radians(self.angle + 90)), self.y + search_radius * math.sin(math.radians(self.angle + 90)))
         self.point_D = (self.x + search_radius * math.cos(math.radians(self.angle + 270)), self.y + search_radius * math.sin(math.radians(self.angle + 270)))
-    # def random_walk(self):
 
-    def follow(self, following_robot): # TODO
-        # self.k = (following_robot.y - self.y) / (following_robot.x - self.x)
-        # temp_angle = math.atan2((following_robot.x, following_robot.y), (self.x, self.y))
-        # if temp_angle < 0:
-        #     temp_angle += temp_angle + math.pi
-        # self.angle = math.degrees(temp_angle)
+    def follow(self, following_robot):
         self.angle = angle_between((following_robot.previous_x - self.x, following_robot.previous_y - self.y), (1,0))
         self.k = math.tan(math.radians(self.angle))
         self.x = following_robot.previous_x
         self.y = following_robot.previous_y
-
-
-    def talk(self): # TODO
-        pass
 
     def judge_overlaping(self, another_robot):
         points = np.array([(self.x, self.y), self.point_A, self.point_B])
         test_points = np.array([(another_robot.x, another_robot.y), another_robot.point_C, another_robot.point_D])
         hull = ConvexHull( points )
         hull_path = Path( points[hull.vertices] )
-        if hull_path.contains_points(test_points).any():
+        if hull_path.contains_points(test_points).any() and self.queue_list[0] != another_robot.id:
             self.is_following = another_robot.id
+            self.queue_list = self.queue_list + another_robot.queue_list
             another_robot.follower = self.id
+            # another_robot.queue_list = self.queue_list
+            for i in self.queue_list:
+                robots[i].queue_list = self.queue_list
             print(self.id, " has find ", another_robot.id)
             global follow_num
             follow_num += 1
+            print(self.queue_list)
 
     def update_previous_coordinates(self):
         self.previous_x = self.x
@@ -107,7 +104,7 @@ robots = [Robot(i, random.randint(-10, 10), random.randint(-10,
 
 
 # First set up the figure, the axis, and the plot element we want to animate
-fig = plt.figure()
+fig = plt.figure(figsize=(8,8))
 ax = plt.axes(xlim=(-12, 12), ylim=(-12, 12))
 # plt.grid(True)
 patchs = [matplotlib.patches.Wedge(
@@ -115,25 +112,16 @@ patchs = [matplotlib.patches.Wedge(
 patchs_tail = [matplotlib.patches.Wedge(
     (robot_i.x, robot_i.y), search_radius, robot_i.angle + 90, robot_i.angle + 270) for robot_i in robots]
 
-# initialization function: plot the background of each frame
-#
-# def stop_circle():
-#     return 0
-
-
 def angle_between(p1, p2):
     ang1 = np.arctan2(*p1[::-1])
     ang2 = np.arctan2(*p2[::-1])
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
-def check_chain():
+def stop_calaulate():
     if follow_num == robot_nums:
         return False
     else:
         return True
-
-# def check_chain():
-#     if
 
 def init():
     for i in range(robot_nums):
@@ -151,7 +139,7 @@ def animate(frame):
     for i in range(robot_nums):
         robots[i].update_previous_coordinates()
     for i in range(robot_nums):
-        if robots[i].is_following is None and check_chain():
+        if robots[i].is_following is None and stop_calaulate():
             another_robot_list = [robots[j] for j in range(robot_nums) if j!=i and robots[j].follower is None]
             for another_robot in another_robot_list:
                 if robots[i].is_following is None and another_robot.is_following != i:

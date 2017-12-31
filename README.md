@@ -1,7 +1,6 @@
 ## swarm robotics simulation
 
 ### TODO:
- - prevent chain cycle: mantain a global Linked list
  - multiprocess
 
 #### Reference:
