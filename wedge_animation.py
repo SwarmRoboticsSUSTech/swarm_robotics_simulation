@@ -117,7 +117,7 @@ def angle_between(p1, p2):
     ang2 = np.arctan2(*p2[::-1])
     return np.rad2deg((ang1 - ang2) % (2 * np.pi))
 
-def stop_calaulate():
+def continue_calaulate():
     if follow_num == robot_nums:
         return False
     else:
@@ -138,12 +138,13 @@ def animate(frame):
         robots[i].update_itself()
     for i in range(robot_nums):
         robots[i].update_previous_coordinates()
-    for i in range(robot_nums):
-        if robots[i].is_following is None and stop_calaulate():
-            another_robot_list = [robots[j] for j in range(robot_nums) if j!=i and robots[j].follower is None]
-            for another_robot in another_robot_list:
-                if robots[i].is_following is None and another_robot.is_following != i:
-                    robots[i].judge_overlaping(another_robot)
+    if continue_calaulate():
+        for i in range(robot_nums):
+            if robots[i].is_following is None:
+                another_robot_list = [robots[j] for j in range(robot_nums) if j!=i and robots[j].follower is None]
+                for another_robot in another_robot_list:
+                    if robots[i].is_following is None and another_robot.is_following != i:
+                        robots[i].judge_overlaping(another_robot)
     for i in range(robot_nums):
         patchs[i].set_center((robots[i].x, robots[i].y))
         patchs_tail[i].set_center((robots[i].x, robots[i].y))
